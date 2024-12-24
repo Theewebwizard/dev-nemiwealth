@@ -99,5 +99,4 @@ app.post('/webhookdata', (req, res) => {
     } catch (error) {
         console.error('Error during initial message sending:', error.message);
     }
-
 })();
