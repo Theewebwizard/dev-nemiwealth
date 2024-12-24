@@ -2,12 +2,25 @@ require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
 const axios = require('axios');
+const ngrok = require('@ngrok/ngrok'); 
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+PHONE_NUMBER_ID = process.env.PHONE_NUMBER_ID;
+WHATSAPP_TOKEN = process.env.WHATSAPP_TOKEN;
+NGROK_AUTH_TOKEN = process.env.NGROK_AUTH_TOKEN;
+
+const requiredEnvVars = ['PHONE_NUMBER_ID', 'WHATSAPP_TOKEN', 'NGROK_AUTH_TOKEN'];
+requiredEnvVars.forEach(varName => {
+    if (!process.env[varName]) {
+        throw new Error(`Environment variable ${varName} is not set!`);
+    }
+});
+
 // Middleware
 app.use(bodyParser.json());
+
 
 // Function to Send WhatsApp Message
 const sendMessage = async (recipient, templateName = 'wishing_hello') => {
@@ -44,64 +57,37 @@ const sendMessage = async (recipient, templateName = 'wishing_hello') => {
     }
 };
 
-app.get('/webhook', (req, res) => {
-    const VERIFY_TOKEN = process.env.WHATSAPP_VERIFY_TOKEN || 'your_verify_token';
-    
-    // Parse the query params
-    const mode = req.query['hub.mode'];
-    const token = req.query['hub.verify_token'];
-    const challenge = req.query['hub.challenge'];
-  
-    // Validate the request
-    if (mode === 'subscribe' && token === VERIFY_TOKEN) {
-      console.log('Webhook validation successful!');
-      res.status(200).send(challenge);
-    } else {
-      console.error('Webhook validation failed!');
-      res.status(403).send('Forbidden');
-    }
-  });
-  
-  // Webhook for Receiving Messages (POST)
-  app.post('/webhook', (req, res) => {
+app.post('/webhookdata', (req, res) => { 
     try {
-      const body = req.body;
-  
-      // Log incoming webhook
-      console.log('Incoming webhook:', JSON.stringify(body, null, 2));
-  
-      // Check for messages in the webhook event
-      if (body.object && body.entry && body.entry[0].changes && body.entry[0].changes[0].value.messages) {
-        const message = body.entry[0].changes[0].value.messages[0];
-        const sender = message.from; // Sender's phone number
-        const text = message.text?.body; // Message text content
-  
-        console.log(`Received a message from ${sender}: ${text}`);
-  
-        // Process the message (you can respond based on its content)
-        // For example:
-        if (text.toLowerCase().includes('sip')) {
-          console.log('User wants to do sip');
+        const webhookData = JSON.parse(req.body.correctdata);
+        const changes = webhookData.entry[0].changes[0].value;
+
+        // Handle status updates
+        if (changes.statuses) {
+            const status = changes.statuses[0];
+            console.log(`Message ${status.id}: ${status.status.toUpperCase()}`);
         }
-      } else {
-        console.log('No messages found in the webhook event.');
-      }
-  
-      // Respond to WhatsApp API to acknowledge the webhook
-      res.status(200).send('EVENT_RECEIVED');
+
+        // Handle incoming messages
+        if (changes.messages) {
+            const message = changes.messages[0];
+            const sender = changes.contacts[0].profile.name;
+            
+            if (message.type === 'button') {
+                console.log(`Button pressed by ${sender}: ${message.button.text}`);
+
+            } else if (message.type === 'text') {
+                console.log(`Text from ${sender}: ${message.text.body}`);
+            }
+        }
+
+        res.status(200).json({ success: true });
     } catch (error) {
-      console.error('Error processing webhook:', error.message);
-      res.status(500).send('Internal Server Error');
+        console.error('Webhook processing error:', error);
+        res.status(500).json({ error: error.message });
     }
-  });
+});
 
-
-
-
-
-
-
-// Start Server and Send a Message
 (async () => {
     app.listen(PORT, () => {
         console.log(`Server running on http://localhost:${PORT}`);
@@ -113,4 +99,5 @@ app.get('/webhook', (req, res) => {
     } catch (error) {
         console.error('Error during initial message sending:', error.message);
     }
+
 })();
