@@ -1,8 +1,8 @@
-const { sendMessage, sendDocMessage } = require('../services/whatsappService');
+const { sendMessage, sendDocMessage,sendinvredMessage } = require('../services/whatsappService');
 const logger = require('../utils/logger');
 
 const processedMessages = new Set();
-
+let meow = 0;
 exports.handleWebhook = async (req, res) => {
   try {
     const webhookData = JSON.parse(req.body.correctdata);
@@ -50,7 +50,17 @@ async function handleIncomingMessages(messages, contacts) {
 
     if (message.type === 'button') {
       logger.info(`Button pressed by ${sender}: ${message.button.text}`);
-      if (message.button.text === 'start an SIP') {
+       //step 2 sip or lumpsum
+      if (message.button.text === 'Invest') {
+        try {
+          const response = await sendMessage('919399450169', 'wishing_hello');
+          logger.info('Document verification message sent successfully:', response);
+        } catch (error) {
+          logger.error('Error sending document verification message:', error.message);
+        }
+      }
+        //how much money would you like to invest
+      if (message.button.text === 'start an SIP') { //after asking for money we will put this in debas asked
         try {
           const response = await sendDocMessage('919399450169', 'documents_verification');
           logger.info('Document verification message sent successfully:', response);
@@ -58,12 +68,23 @@ async function handleIncomingMessages(messages, contacts) {
           logger.error('Error sending document verification message:', error.message);
         }
       }
-    } else if (message.type === 'text') {
+      
+
+
+    } 
+    
+    else if (message.type === 'text') {
       logger.info(`Text from ${sender}: ${message.text.body}`);
-      if(message.text.body === 'hi'){
-        await sendMessage('919399450169', 'wishing_hello');
-        logger.info('Hello message sent successfully');
+      if(message.text.body.toLowerCase() === 'hi'){
+        //step 1 invest or take out
+        await sendinvredMessage('919399450169', 'invest');
+        logger.info('asking for investment sent sucesfully message sent successfully');
       }
+      if(Number.isInteger(Number(message.text.body))){
+        meow = message.text.body;
+        console.log("Meow:", meow);
+      } 
+
     }
   }
 }

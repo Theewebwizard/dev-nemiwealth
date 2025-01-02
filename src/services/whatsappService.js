@@ -2,7 +2,7 @@ const axios = require('axios');
 const { PHONE_NUMBER_ID, WHATSAPP_TOKEN } = require('../config/env');
 const logger = require('../utils/logger');
 
-const sendMessage = async (recipient, templateName = 'wishing_hello') => {
+const sendMessage = async (recipient, templateName = 'wishing_hello') => { //sip or what
   if (!recipient || !templateName) {
     throw new Error('Recipient and templateName are required!');
   }
@@ -36,7 +36,7 @@ const sendMessage = async (recipient, templateName = 'wishing_hello') => {
   }
 };
 
-const sendDocMessage = async (recipient, templateName = 'documents_verification') => {
+const sendDocMessage = async (recipient, templateName = 'documents_verification') => {//send aadhar 
   if (!recipient || !templateName) {
     throw new Error('Recipient and templateName are required!');
   }
@@ -65,7 +65,7 @@ const sendDocMessage = async (recipient, templateName = 'documents_verification'
                 {
                   type: 'text',
                   parameter_name: 'documen_tname',
-                  text: 'Aadhar',
+                  text: "total amount you'd like to invest in ruppes and please enter only numbers.",
                 },
               ],
             },
@@ -82,7 +82,44 @@ const sendDocMessage = async (recipient, templateName = 'documents_verification'
   }
 };
 
+const sendinvredMessage = async (recipient, templateName = 'invest') => { //invest or what
+  if (!recipient || !templateName) {
+    throw new Error('Recipient and templateName are required!');
+  }
+
+  const apiUrl = `https://graph.facebook.com/v21.0/${PHONE_NUMBER_ID}/messages`;
+
+  try {
+    const response = await axios({
+      url: apiUrl,
+      method: 'post',
+      headers: {
+        'Authorization': `Bearer ${WHATSAPP_TOKEN}`,
+        'Content-Type': 'application/json',
+      },
+      data: {
+        messaging_product: 'whatsapp',
+        to: recipient,
+        type: 'template',
+        template: {
+          name: templateName,
+          language: { code: 'en' },
+        },
+      },
+    });
+
+    logger.info(`Message sent to ${recipient} with template ${templateName}`);
+    return response.data;
+  } catch (error) {
+    logger.error('Error sending message:', error.response?.data || error.message);
+    throw new Error(error.response?.data?.error?.message || 'Failed to send message');
+  }
+};
+
+
+
 module.exports = {
   sendMessage,
   sendDocMessage,
+  sendinvredMessage
 };
