@@ -1,0 +1,97 @@
+{
+    "states": {
+      "INITIAL": {
+        "transitions": {
+          "TEXT_WITH_KEYWORD": {
+            "nextState": "AWAITING_INVESTMENT_CHOICE",
+            "action": "sendinvredMessage",
+            "params": {
+              "template": "invest"
+            }
+          }
+        },
+        "validationRules": {
+          "TEXT_WITH_KEYWORD": {
+            "type": "text",
+            "matches": ["hi", "hey", "hello"]
+          }
+        }
+      },
+      "AWAITING_INVESTMENT_CHOICE": {
+        "transitions": {
+          "INVEST_BUTTON": {
+            "nextState": "AWAITING_INVESTMENT_TYPE",
+            "action": "sendMessage",
+            "params": {
+              "template": "wishing_hello"
+            },
+            "contextUpdates": {
+              "operation": "invest"
+            }
+          }
+        },
+        "validationRules": {
+          "INVEST_BUTTON": {
+            "type": "button",
+            "text": "Invest"
+          }
+        }
+      },
+      "AWAITING_INVESTMENT_TYPE": {
+        "transitions": {
+          "SIP_BUTTON": {
+            "nextState": "AWAITING_AMOUNT",
+            "action": "sendDocMessage",
+            "params": {
+              "template": "documents_verification"
+            },
+            "contextUpdates": {
+              "operation2": "SIP"
+            }
+          },
+          "LUMPSUM_BUTTON": {
+            "nextState": "AWAITING_AMOUNT",
+            "action": "sendDocMessage",
+            "params": {
+              "template": "documents_verification"
+            },
+            "contextUpdates": {
+              "operation2": "Lumpsum"
+            }
+          }
+        },
+        "validationRules": {
+          "SIP_BUTTON": {
+            "type": "button",
+            "text": "start an SIP"
+          },
+          "LUMPSUM_BUTTON": {
+            "type": "button",
+            "text": "Lumpsum"
+          }
+        }
+      },
+      "AWAITING_AMOUNT": {
+        "transitions": {
+          "VALID_AMOUNT": {
+            "nextState": "COMPLETED",
+            "action": "confirmMessage",
+            "params": {
+              "template": "confirmation"
+            },
+            "saveToDatabase": true
+          }
+        },
+        "validationRules": {
+          "VALID_AMOUNT": {
+            "type": "text",
+            "isNumber": true
+          }
+        }
+      },
+      "COMPLETED": {
+        "transitions": {},
+        "validationRules": {}
+      }
+    }
+  }

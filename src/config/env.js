@@ -1,4 +1,4 @@
-const requiredEnvVars = ['PHONE_NUMBER_ID', 'WHATSAPP_TOKEN', 'NGROK_AUTH_TOKEN'];
+const requiredEnvVars = ['PHONE_NUMBER_ID', 'WHATSAPP_TOKEN', 'NGROK_AUTH_TOKEN', 'PORT'];
 
 requiredEnvVars.forEach(varName => {
   if (!process.env[varName]) {
